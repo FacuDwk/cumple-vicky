@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Feliz Cumple Vicky! - Tu Festejo Serrano</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --pastel-green: #8EAC87; 
+            --pastel-light: #F4F6F4; 
+            --notebook-white: #FFFFFF;
+            --serrano-dark: #2C3E2D;  
+            --radius-notebook: 20px; 
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(rgba(255,255,255,0.1), rgba(44, 62, 45, 0.4)), url('https://cerrouritorcoam.com.ar/assets/img/Diurna/Diurna5.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--serrano-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* --- Contenedor de la Libreta Grande (1050px total) --- */
+        .book-container {
+            position: relative;
+            width: 1050px;
+            height: 600px;
+            perspective: 2000px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .book {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .book::after {
+            content: '';
+            position: absolute;
+            left: 525px; 
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: rgba(44, 62, 45, 0.15);
+            box-shadow: 0 0 12px rgba(0,0,0,0.35);
+            z-index: 150;
+            pointer-events: none;
+        }
+
+        /* --- Hojas Físicas --- */
+        .sheet {
+            position: absolute;
+            width: 525px; 
+            height: 100%;
+            top: 0;
+            left: 525px; 
+            transform-style: preserve-3d;
+            transform-origin: left center; 
+            transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+
+        .sheet.flipped { transform: rotateY(-180deg); }
+
+        /* --- Caras de las Hojas --- */
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: var(--notebook-white);
+            padding: 35px 30px;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .front {
+            border-radius: 0 var(--radius-notebook) var(--radius-notebook) 0;
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.01), 5px 8px 30px rgba(0,0,0,0.15);
+            z-index: 2;
+            transform: rotateY(0deg);
+            border-left: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .back {
+            border-radius: var(--radius-notebook) 0 0 var(--radius-notebook);
+            box-shadow: inset -10px 0 20px rgba(0,0,0,0.01), -5px 8px 30px rgba(0,0,0,0.15);
+            transform: rotateY(180deg);
+            background: var(--pastel-light);
+            border-right: 1px solid rgba(0,0,0,0.03);
+        }
+
+        /* --- Portadas --- */
+        .portada {
+            background-color: var(--pastel-green);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: none;
+            padding: 40px;
+        }
+        .portada h1 { font-size: 3.5rem; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
+        .portada p { margin-top: 25px; text-transform: uppercase; letter-spacing: 4px; font-size: 0.85rem; font-weight: 700; opacity: 0.9; }
+
+        .section-header {
+            border-left: 5px solid var(--pastel-green);
+            padding-left: 14px;
+            margin-bottom: 20px;
+        }
+        .section-header h2 { font-size: 1.4rem; text-transform: uppercase; font-weight: 900; letter-spacing: -0.5px; color: var(--serrano-dark); }
+        .section-header p { font-size: 0.8rem; color: #556656; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+
+        /* --- Estilo Polaroid Final --- */
+        .polaroid-container {
+            background: white;
+            padding: 15px 15px 45px 15px;
+            width: 320px;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: rotate(-3deg);
+            border: 1px solid #f0f0f0;
+        }
+        .polaroid-photo {
+            width: 100%;
+            height: 300px;
+            background: #eee;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* --- Grids adaptables --- */
+        .grid-items { display: grid; gap: 15px; flex: 1; align-content: center; }
+        .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .cols-2 { grid-template-columns: 1fr 1fr; }
+
+        .item-card {
+            background: white;
+            border: 1px solid #E2E8E2;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+        .item-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: var(--pastel-green); transform: translateY(-2px); }
+
+        .item-img { width: 100%; height: 160px; background: #F0F4F0; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; border-radius: 4px; overflow: hidden; }
+        .item-img img { width: 100%; height: 100%; object-fit: cover; }
+
+        .item-info h3 { font-size: 0.9rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.3px; line-height: 1.1; color: var(--serrano-dark); }
+        .item-info p { font-size: 0.75rem; color: var(--pastel-green); font-weight: 700; margin-top: 4px; }
+
+        /* --- Checkbox --- */
+        .select-box {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--pastel-green);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            z-index: 10;
+        }
+        .select-box.checked { background: var(--pastel-green); }
+        .select-box.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
+
+        /* --- Resumen --- */
+        .summary-container { flex: 1; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .summary-list { list-style: none; overflow-y: auto; max-height: 380px; padding-right: 5px; }
+        .summary-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #E2E8E2; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; }
+        .summary-item .m-time { color: var(--pastel-green); font-weight: 900; font-size: 0.8rem; }
+
+        /* --- Controles --- */
+        .nav-controls {
+            display: flex; gap: 30px; align-items: center; z-index: 200; background: rgba(255, 255, 255, 0.85);
+            padding: 10px 25px; border-radius: 30px; backdrop-filter: blur(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .btn { background: var(--serrano-dark); color: white; border: none; padding: 12px 30px; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; cursor: pointer; border-radius: 4px; }
+        .btn:disabled { opacity: 0.15; cursor: not-allowed; }
+        #pageLabel { font-weight: 900; font-size: 0.9rem; color: var(--serrano-dark); }
+
+        /* --- Modales --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 45, 0.4); backdrop-filter: blur(6px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 460px; padding: 30px; border-radius: 16px; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; font-weight: bold; color: #AAA; z-index: 10; }
+        .modal-large-img { width: 100%; height: 240px; border-radius: 8px; object-fit: cover; margin-bottom: 20px; }
+
+        @media (max-width: 1100px) { .book-container { transform: scale(0.85); margin-bottom: -40px; } }
+        @media (max-width: 920px) { .book-container { transform: scale(0.68); margin-bottom: -100px; } }
+        @media (max-width: 730px) { .book-container { transform: scale(0.55); margin-bottom: -150px; } }
+        @media (max-width: 580px) { .book-container { transform: scale(0.34); margin-bottom: -220px; } .nav-controls { margin-top: 20px; } }
+    </style>
+</head>
+<body>
+
+    <div class="book-container">
+        <div class="book" id="book">
+            
+            <div class="sheet" id="sheet-1">
+                <div class="front portada">
+                    <h1>FELIZ CUMPLE<br>VICKY!! ❤️</h1>
+                    <p>Paseito de cumpleaños en Capilla del Monte</p>
+                </div>
+                <div class="back">
+                    <div class="section-header">
+                        <h2>Sábado: El Almuerzo</h2>
+                        <p>Elegí dónde arranca la magia gastronómica</p>
+                    </div>
+                    <div class="grid-items cols-3">
+                        <div class="item-card" onclick="openDetails(1)">
+                            <div class="select-box" id="check-1" onclick="event.stopPropagation(); toggleSelect(1)"></div>
+                            <div class="item-img"><img src="https://turismocapilla.gob.ar/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-15-at-15.32.38-1-768x1024.jpeg" id="img-1"></div>
+                            <div class="item-info"><h3>Copérnico</h3><p>13:00 HS</p></div>
+                        </div>
+                        <div class="item-card" onclick="openDetails(2)">
+                            <div class="select-box" id="check-2" onclick="event.stopPropagation(); toggleSelect(2)"></div>
+                            <div class="item-img"><img src="https://turismocapilla.gob.ar/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-15-at-15.19.49-1024x766.jpeg" id="img-2"></div>
+                            <div class="item-info"><h3>Buddhi</h3><p>13:00 HS</p></div>
+                        </div>
+                        <div class="item-card" onclick="openDetails(3)">
+                            <div class="select-box" id="check-3" onclick="event.stopPropagation(); toggleSelect(3)"></div>
+                            <div class="item-img"><img src="https://instagram.faep7-1.fna.fbcdn.net/v/t51.82787-15/649856495_18029627252799233_5744042108864126932_n.webp?_nc_cat=109&ig_cache_key=Mjk3NjAzNjAxNjk1MjE2NTgzNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=GK7I0x-7d7sQ7kNvwExs1Ln&_nc_oc=AdosgZ7zDeyuaYTwu5VqosDj_Ghp1-a2uVlEGyV-WiGesY_7cHM3OFG21pcRsV-2gEI&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.faep7-1.fna&_nc_gid=ozXiPkyrBFrFS7szalmkvQ&_nc_ss=7a22e&oh=00_Af-H-nQ6Hig4946VDGipdmVG1fS2IcmzQ6irLQo3dMqS9g&oe=6A310E64" id="img-3"></div>
+                            <div class="item-info"><h3>Restobar Utopía</h3><p>13:00 HS</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet" id="sheet-2">
+                <div class="front">
+                    <div class="section-header">
+                        <h2>Sábado: Relax & Noche</h2>
+                        <p>Desconexión total y mimos a medida</p>
+                    </div>
+                    <div class="grid-items cols-3">
+                        <div class="item-card" onclick="openDetails(4)">
+                            <div class="select-box" id="check-4" onclick="event.stopPropagation(); toggleSelect(4)"></div>
+                            <div class="item-img"><img src="https://eco-casa-de-diseo-en-las-sierras.allcordobahotels.com/data/Images/700x500w/14806/1480675/1480675844/image-san-esteban-eco-casa-de-diseno-en-las-sierras-34.JPEG" id="img-4"></div>
+                            <div class="item-info"><h3>Eco Casa Tiny</h3><p>15:00 HS</p></div>
+                        </div>
+                        <div class="item-card" onclick="openDetails(5)">
+                            <div class="select-box" id="check-5" onclick="event.stopPropagation(); toggleSelect(5)"></div>
+                            <div class="item-img"><img src="https://i.postimg.cc/MpgV8hGq/Gemini-Generated-Image-ffapkwffapkwffap.png" id="img-5"></div>
+                            <div class="item-info"><h3>Masajitos Facu</h3><p>18:30 HS</p></div>
+                        </div>
+                        <div class="item-card" onclick="openDetails(6)">
+                            <div class="select-box" id="check-6" onclick="event.stopPropagation(); toggleSelect(6)"></div>
+                            <div class="item-img"><img src="https://img-global.cpcdn.com/recipes/381409e43f1d7bee/1360x1562f0.5_0.5_1.0q80/pollo-al-curry-con-arroz-basmati-foto-principal.webp" id="img-6"></div>
+                            <div class="item-info"><h3>Curry de Facu</h3><p>21:30 HS</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="back">
+                    <div class="section-header">
+                        <h2>Domingo: Aventura Temprana</h2>
+                        <p>Los senderos más impactantes del valle</p>
+                    </div>
+                    <div class="grid-items cols-2">
+                        <div class="item-card" onclick="openDetails(7)">
+                            <div class="select-box" id="check-7" onclick="event.stopPropagation(); toggleSelect(7)"></div>
+                            <div class="item-img"><img src="https://ss-cnt-001c.esmsv.com/r/content/host1/c1e281e6e168136866f32a9995af9bb9//editor/WhatsAppImage2024-10-17at20.webp" id="img-7"></div>
+                            <div class="item-info"><h3>Los Terrones</h3><p>09:30 HS</p></div>
+                        </div>
+                        <div class="item-card" onclick="openDetails(8)">
+                            <div class="select-box" id="check-8" onclick="event.stopPropagation(); toggleSelect(8)"></div>
+                            <div class="item-img"><img src="https://p16-common-sign.tiktokcdn-us.com/tos-maliva-p-0068/okKtJFDGREBHqIARdEEEfVCApAjQVxAxBpfZdA~tplv-tiktokx-origin.image?dr=9636&x-expires=1781222400&x-signature=zZ6tDsQNCjHYfhZSQoGh8%2BLWFfM%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=55bbe6a9&idc=useast5" id="img-8"></div>
+                            <div class="item-info"><h3>Paso del Indio</h3><p>11:30 HS</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet" id="sheet-3">
+                <div class="front">
+                    <div class="section-header">
+                        <h2>Domingo: Cumbres Desafío</h2>
+                        <p>La mística de las sierras altas</p>
+                    </div>
+                    <div class="grid-items cols-2">
+                        <div class="item-card" onclick="openDetails(9)">
+                            <div class="select-box" id="check-9" onclick="event.stopPropagation(); toggleSelect(9)"></div>
+                            <div class="item-img"><img src="https://s1.wklcdn.com/image_122/3680586/46289916/30511939.jpg" id="img-9"></div>
+                            <div class="item-info"><h3>Cerro Las Gemelas</h3><p>09:30 HS</p></div>
+                        </div>
+                        <div class="item-card" onclick="openDetails(10)">
+                            <div class="select-box" id="check-10" onclick="event.stopPropagation(); toggleSelect(10)"></div>
+                            <div class="item-img"><img src="https://s2.wklcdn.com/image_1/36341/250039/53303Master.jpg" id="img-10"></div>
+                            <div class="item-info"><h3>Cerro Uritorco</h3><p>A CHARLAR</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="back">
+                    <div class="summary-container">
+                        <div>
+                            <div class="section-header">
+                                <h2>Tu Festejo Serrano</h2>
+                                <p>El itinerario que armaste para este finde</p>
+                            </div>
+                            <div class="summary-list" id="summary-list">
+                                </div>
+                        </div>
+                        <button class="btn" style="width: 100%; background: var(--pastel-green);" onclick="celebratePlan()">¡Confirmar Itinerario con Facu!</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet" id="sheet-4">
+                <div class="front portada" style="background-color: var(--serrano-dark); border-radius: 0 var(--radius-notebook) var(--radius-notebook) 0;">
+                    <h1>TE AMO ❤️</h1>
+                    <div class="polaroid-container">
+                        <img src="https://i.postimg.cc/d3Cg5MDC/IMG-20260407-WA0011.jpg" class="polaroid-photo" alt="Nuestra Foto">
+                    </div>
+                </div>
+                <div class="back" style="background: var(--serrano-dark); border-radius: var(--radius-notebook) 0 0 var(--radius-notebook);"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="nav-controls">
+        <button class="btn" id="prevBtn" onclick="prev()">← Anterior</button>
+        <span id="pageLabel">1 / 4</span>
+        <button class="btn" id="nextBtn" onclick="next()">Siguiente →</button>
+    </div>
+
+    <div class="modal" id="modal" onclick="if(event.target==this) closeModal()">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">×</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, name: "Copérnico Restaurante", day: "Sábado", time: "13:00 hs", desc: "Una verdadera joya culinaria oculta en Capilla del Monte con una sólida calificación de 4.8 estrellas. Según las reseñas, destaca por su propuesta de cocina honesta con un auténtico sabor a hogar, porciones sumamente abundantes, excelente presentación visual y un ambiente cálido que además ofrece fantásticas opciones inclusivas veganas y sin gluten." },
+            { id: 2, name: "Buddhi", day: "Sábado", time: "13:00 hs", desc: "Un bellísimo restaurante gastronómico muy elogiado por su atmósfera íntima, tranquila y de cuidada inspiración oriental/hinduista que invita a la calma. Su carta fusiona de manera audaz platos caseros tradicionales con sutiles toques exóticos internacionales, ofreciendo preparaciones gourmet abundantes con una atención de primer nivel." },
+            { id: 3, name: "Restobar Utopía", day: "Sábado", time: "13:00 hs", desc: "A solo metros de la tradicional calle techada, es un encantador espacio que fusiona la calidez de un bodegón clásico de barrio con una propuesta innovadora y cultural. Las opiniones en la web destacan su espectacular patio al aire libre y su firme compromiso con exquisitas opciones gastronómicas 100% plant-based." },
+            /* DESCRIPCIÓN ACTUALIZADA */
+            { id: 4, name: "Eco Casa San Esteban", day: "Sábado", time: "15:00 hs", desc: "Exclusiva vivienda de diseño y arquitectura contemporánea en San Esteban; una encantadora tiny house sustentable y eco-amigable ideada minuciosamente para una desconexión absoluta. Este acogedor refugio minimalista ofrece un espacio moderno e íntimo, rodeado de naturaleza pura, diseñado especialmente para conectar con la tranquilidad de las sierras cordobesas, olvidarse de la rutina y disfrutar del hermoso paisaje en total privacidad." },
+            { id: 5, name: "Masajitos y mimos por Facu", day: "Sábado", time: "18:30 hs", desc: "Sesión VIP de relax absoluto en la cabaña. Masajes descontracturantes, mimos personalizados y cero tensiones para la cumpleañera estrella, brindados con todo el amor de tu masajista preferido." },
+            { id: 6, name: "Cena: Curry casero de Facu", day: "Sábado", time: "21:30 hs", desc: "Cena súper íntima y romántica cocinada a fuego lento. Un curry especial hecho con muchísimo amor, especias secretas, música suave y una atmósfera súper cálida y especial pensada exclusivamente para festejar tu noche." },
+            { id: 7, name: "Trekking Los Terrones", day: "Domingo", time: "09:30 hs", desc: "Imponente parque autóctono y cultural ubicado a 17 km de Capilla del Monte. El trekking es una travesía mágica de aproximadamente 2 horas y media que recorre arroyos serpenteantes, cañones angostos, escaleras metálicas y asombrosas formaciones rocosas rojizas de origen sedimentario continental que culminan en un mirador con vistas panorámicas únicas del valle." },
+            { id: 8, name: "Trekking El Paso del Indio", day: "Domingo", time: "11:30 hs", desc: "Aventura ancestral situada en el paseo Los Mogotes, un desfiladero natural de formaciones rocosas antiquísimas que desafía con estrechos y divertidos pasadizos de piedra. El sendero está cargado de mística e historia ya que era utilizado por la comunidad comechingona y resguarda ríos subterráneos junto a una pequeña cascada inigualable." },
+            { id: 9, name: "Trekking Cerro Las Gemelas", day: "Domingo", time: "09:30 hs", desc: "Ascenso a la cumbre serrana a 1695 msnm partiendo desde el bellísimo complejo Agua de los Palos (a 5 km del pueblo). El sendero autoguiado cuenta con 8 estaciones bien identificadas y premia el esfuerzo personal con una imponente vista en 360 grados de la ciudad, el Dique El Cajón y gran parte del hermoso Valle de Punilla." },
+            { id: 10, name: "Trekking Cerro Uritorco", day: "Domingo", time: "A charlar", desc: "El gigante místico soberano de las Sierras Chicas con 1979 msnm. Una experiencia de montaña catalogada como exigente debido a su pendiente y un desnivel positivo de 900 metros en un sendero de 10 km (ida y vuelta), ideal para conectar con el esfuerzo personal y vivenciar la profunda mística energética que envuelve a este emblema cordobés." }
+        ];
+
+        let selectedItems = new Set();
+        let currentState = 1;
+        const totalStates = 4;
+
+        const sheets = [
+            document.getElementById('sheet-1'), document.getElementById('sheet-2'),
+            document.getElementById('sheet-3'), document.getElementById('sheet-4')
+        ];
+
+        const book = document.getElementById('book');
+
+        function updateBookLayers() {
+            if (currentState === 1) { book.style.transform = "translateX(-262.5px)"; } 
+            else { book.style.transform = "translateX(0px)"; }
+
+            sheets.forEach((sheet, index) => {
+                const sheetNumber = index + 1;
+                if (sheetNumber < currentState) { sheet.classList.add('flipped'); sheet.style.zIndex = sheetNumber; } 
+                else if (sheetNumber === currentState) { sheet.classList.remove('flipped'); sheet.style.zIndex = 100; } 
+                else { sheet.classList.remove('flipped'); sheet.style.zIndex = 100 - sheetNumber; }
+            });
+
+            if (currentState > 1) { sheets[currentState - 2].style.zIndex = 100; }
+
+            document.getElementById('pageLabel').innerText = `${currentState} / ${totalStates}`;
+            document.getElementById('prevBtn').disabled = currentState === 1;
+            document.getElementById('nextBtn').disabled = currentState === totalStates;
+        }
+
+        function next() { if (currentState < totalStates) { currentState++; updateBookLayers(); } }
+        function prev() { if (currentState > 1) { currentState--; updateBookLayers(); } }
+
+        function toggleSelect(id) {
+            const checkbox = document.getElementById(`check-${id}`);
+            if (selectedItems.has(id)) { selectedItems.delete(id); if(checkbox) checkbox.classList.remove('checked'); } 
+            else { selectedItems.add(id); if(checkbox) checkbox.classList.add('checked'); }
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const list = document.getElementById('summary-list');
+            if (selectedItems.size === 0) {
+                list.innerHTML = '<p style="text-align:center; margin-top:80px; color:#778878; font-size:0.85rem; font-weight:700; text-transform:uppercase;">¡Elegí tus momentos favoritos!</p>';
+                return;
+            }
+            const chosen = products.filter(p => selectedItems.has(p.id));
+            list.innerHTML = chosen.map(p => `
+                <div class="summary-item">
+                    <span>${p.name} (${p.day})</span>
+                    <span class="m-time">${p.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function openDetails(id) {
+            const p = products.find(prod => prod.id === id);
+            const modal = document.getElementById('modal');
+            const body = document.getElementById('modal-body');
+            const imgSrc = document.getElementById(`img-${id}`).src;
+            
+            body.innerHTML = `
+                <img src="${imgSrc}" class="modal-large-img" alt="${p.name}">
+                <h2 style="color:var(--serrano-dark); text-transform:uppercase; font-weight:900; font-size:1.3rem; margin-bottom:2px;">${p.name}</h2>
+                <p style="font-size:0.75rem; color:var(--pastel-green); margin-bottom:15px; font-weight:700; text-transform:uppercase;">${p.day} • ${p.time}</p>
+                <p style="font-size:0.85rem; line-height:1.5; color:#333; margin-bottom:20px;">${p.desc}</p>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button class="btn" style="background:var(--pastel-green);" onclick="toggleSelect(${p.id}); closeModal();">
+                        ${selectedItems.has(p.id) ? 'QUITAR' : 'SUMAR AL FINDE'}
+                    </button>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        function celebratePlan() {
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#8EAC87', '#FFFFFF', '#2C3E2D'] });
+            alert("¡Itinerario guardado! Preparate para el mejor cumple ❤️");
+        }
+
+        let startX = 0;
+        document.addEventListener('touchstart', e => startX = e.touches[0].clientX, {passive: true});
+        document.addEventListener('touchend', e => {
+            if(document.getElementById('modal').style.display === 'flex') return;
+            let endX = e.changedTouches[0].clientX;
+            if (startX - endX > 60) next();
+            if (endX - startX > 60) prev();
+        }, {passive: true});
+
+        window.addEventListener('DOMContentLoaded', () => {
+            confetti({ particleCount: 180, spread: 85, origin: { y: 0.6 }, colors: ['#8EAC87', '#FFFFFF', '#2C3E2D'] });
+        });
+
+        updateSummary();
+        updateBookLayers();
+    </script>
+</body>
+</html>
